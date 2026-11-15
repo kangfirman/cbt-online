@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html class="dark" lang="id">
+<head>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Manajemen Ujian — CBT Admin</title>
+  <link rel="stylesheet" href="../assets/css/tokens.css"/><link rel="stylesheet" href="../assets/css/custom.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@100..900&family=Space+Grotesk:wght@100..900&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: "class", theme: { extend: { colors: { background: "#0b1326", surface: "#0b1326", "surface-container-lowest": "#060e20", "surface-container-low": "#131b2e", "surface-container": "#171f33", "surface-container-high": "#222a3d", "on-surface": "#dae2fd", "on-surface-variant": "#c2c6d6", primary: "#adc6ff", "on-primary": "#002e6a", secondary: "#a4c9ff", tertiary: "#4edea3", error: "#ffb4ab" }, fontFamily: { display: ["Space Grotesk"], body: ["Atkinson Hyperlegible Next"] } } } }</script>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen antialiased">
+  <header class="fixed top-0 w-full h-16 bg-surface-container-lowest border-b border-surface-container-high z-50 flex items-center justify-between px-6">
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[28px]">admin_panel_settings</span><span class="font-display font-bold text-lg tracking-tight">CBT Admin</span></div>
+      <nav class="hidden md:flex gap-4" id="nav-links">
+        <a href="dashboard.html" class="text-sm font-bold text-on-surface-variant hover:text-on-surface transition">Dashboard</a>
+        <a href="bank-soal.html" class="text-sm font-bold text-on-surface-variant hover:text-on-surface transition">Bank Soal</a>
+        <a href="ujian.html" class="text-sm font-bold text-primary">Ujian</a>
+        <a href="hasil.html" class="text-sm font-bold text-on-surface-variant hover:text-on-surface transition">Hasil</a>
+        <a href="monitoring.html" class="text-sm font-bold text-on-surface-variant hover:text-on-surface transition">Monitoring</a>
+      </nav>
+    </div>
+    <div class="flex items-center gap-4">
+      <button onclick="Auth.logout()" class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center hover:bg-error/20 hover:text-error transition"><span class="material-symbols-outlined text-[18px]">logout</span></button>
+    </div>
+  </header>
+
+  <main class="pt-24 px-6 pb-12 max-w-6xl mx-auto flex flex-col lg:flex-row gap-6">
+    <!-- List Ujian -->
+    <div class="flex-1">
+      <h1 class="font-display text-2xl font-bold mb-4">Daftar Ujian</h1>
+      <div class="space-y-3" data-exams-container>
+        <div class="animate-pulse bg-surface-container h-28 rounded-xl"></div>
+      </div>
+    </div>
+
+    <!-- Form Buat Ujian -->
+    <div class="w-full lg:w-96 bg-surface-container rounded-xl p-5 border border-surface-container-high h-fit sticky top-24">
+      <h2 class="font-display text-lg font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-primary">add_task</span> Buat Ujian Baru</h2>
+      <form id="form-ujian" class="flex flex-col gap-3">
+        <div>
+          <label class="block text-xs font-bold text-on-surface-variant mb-1">Nama Ujian</label>
+          <input type="text" id="name" required class="w-full bg-surface-container-lowest border border-surface-container-high rounded p-2 text-sm" placeholder="UTS Matematika">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-on-surface-variant mb-1">Mapel</label>
+          <input type="text" id="subject" required class="w-full bg-surface-container-lowest border border-surface-container-high rounded p-2 text-sm" placeholder="Matematika">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-on-surface-variant mb-1">Durasi (Menit)</label>
+            <input type="number" id="duration" value="60" required class="w-full bg-surface-container-lowest border border-surface-container-high rounded p-2 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-on-surface-variant mb-1">KKM</label>
+            <input type="number" id="kkm" value="75" required class="w-full bg-surface-container-lowest border border-surface-container-high rounded p-2 text-sm">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-on-surface-variant mb-1">Mulai</label>
+            <input type="datetime-local" id="startTime" required class="w-full bg-surface-container-lowest border border-surface-container-high rounded p-2 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-on-surface-variant mb-1">Selesai</label>
+            <input type="datetime-local" id="endTime" required class="w-full bg-surface-container-lowest border border-surface-container-high rounded p-2 text-sm">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-on-surface-variant mb-1">Token (6 Karakter)</label>
+          <input type="text" id="token" maxlength="6" required class="w-full bg-surface-container-lowest border border-surface-container-high rounded p-2 text-sm uppercase" placeholder="ABC123">
+        </div>
+        <div class="flex items-center gap-2 mt-1">
+          <input type="checkbox" id="shuffleQuestions" class="rounded bg-surface-container-lowest border-surface-container-high">
+          <label for="shuffleQuestions" class="text-xs text-on-surface-variant">Acak Soal</label>
+        </div>
+
+        <button type="submit" class="w-full bg-primary text-on-primary font-bold py-2 rounded mt-2 hover:brightness-110 transition">Simpan Ujian</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="../assets/js/config.js"></script><script src="../assets/js/api.js"></script><script src="../assets/js/app.js"></script>
+  <script>
+    async function loadExams() {
+      try {
+        const exams = await API.call('adminExams');
+        const c = document.querySelector('[data-exams-container]');
+        if (exams.length === 0) { c.innerHTML = `<div class="p-6 text-center text-on-surface-variant bg-surface-container rounded-xl">Belum ada ujian.</div>`; return; }
+        
+        c.innerHTML = exams.map(e => `
+          <div class="bg-surface-container p-4 rounded-xl border border-surface-container-high flex flex-col md:flex-row justify-between md:items-center gap-4">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${e.status === 'published' || e.status === 'live' ? 'bg-tertiary/20 text-tertiary' : 'bg-outline/20 text-on-surface-variant'}">${e.status}</span>
+                <span class="font-bold text-lg">${e.name}</span>
+              </div>
+              <div class="text-sm text-on-surface-variant flex flex-wrap gap-x-4 gap-y-1">
+                <span>${e.subject}</span>
+                <span>Durasi: ${e.duration}m</span>
+                <span>Token: <strong class="text-primary font-mono">${e.token}</strong></span>
+                <span>Soal: ${e.questionCount}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              ${e.status === 'draft' ? `<button onclick="publishExam('${e.id}')" class="bg-primary text-on-primary px-4 py-2 rounded text-sm font-bold hover:brightness-110">Publish</button>` : ''}
+              <button onclick="manageQuestions('${e.id}')" class="bg-surface-container-high px-4 py-2 rounded text-sm font-bold hover:bg-surface-container-highest">Set Soal</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) { App.toast(e.message, 'error'); }
+    }
+
+    window.publishExam = async (id) => {
+      if(!confirm('Publish ujian ini? Siswa akan bisa melihatnya sesuai jadwal.')) return;
+      try {
+        await API.call('adminUpdateExamStatus', { examId: id, status: 'published' });
+        App.toast('Ujian dipublish', 'success'); loadExams();
+      } catch (e) { App.toast(e.message, 'error'); }
+    };
+
+    window.manageQuestions = async (examId) => {
+      const input = prompt('Masukkan ID Soal (pisahkan dengan koma jika lebih dari satu, misal: Q-1, Q-2):');
+      if(!input) return;
+      const questionIds = input.split(',').map(s => s.trim()).filter(Boolean);
+      try {
+        await API.call('adminAddQuestions', { examId, questionIds });
+        App.toast(`${questionIds.length} soal ditambahkan ke ujian`, 'success'); loadExams();
+      } catch (e) { App.toast(e.message, 'error'); }
+    };
+
+    document.getElementById('form-ujian').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        name: document.getElementById('name').value,
+        subject: document.getElementById('subject').value,
+        duration: document.getElementById('duration').value,
+        kkm: document.getElementById('kkm').value,
+        startTime: new Date(document.getElementById('startTime').value).toISOString(),
+        endTime: new Date(document.getElementById('endTime').value).toISOString(),
+        token: document.getElementById('token').value.toUpperCase(),
+        shuffleQuestions: document.getElementById('shuffleQuestions').checked,
+        status: 'draft'
+      };
+      try {
+        App.loading(true, 'Menyimpan ujian...');
+        await API.call('adminCreateExam', payload);
+        App.loading(false); App.toast('Ujian berhasil dibuat!', 'success');
+        e.target.reset(); loadExams();
+      } catch (err) { App.loading(false); App.toast(err.message, 'error'); }
+    });
+
+    (async () => {
+      const user = await API.requireAuth();
+      if (user.role !== 'admin' && user.role !== 'guru') { location.href = '../index.html'; return; }
+      loadExams();
+    })();
+  </script>
+</body>
+</html>

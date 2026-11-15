@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html class="dark" lang="id">
+<head>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Bank Soal — CBT Admin</title>
+  <link rel="stylesheet" href="../assets/css/tokens.css"/><link rel="stylesheet" href="../assets/css/custom.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@100..900&family=Space+Grotesk:wght@100..900&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: "class", theme: { extend: { colors: { background: "#0b1326", surface: "#0b1326", "surface-container-lowest": "#060e20", "surface-container-low": "#131b2e", "surface-container": "#171f33", "surface-container-high": "#222a3d", "on-surface": "#dae2fd", "on-surface-variant": "#c2c6d6", primary: "#adc6ff", "on-primary": "#002e6a", tertiary: "#4edea3", error: "#ffb4ab" }, fontFamily: { display: ["Space Grotesk"], body: ["Atkinson Hyperlegible Next"] } } } }</script>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen antialiased">
+  <header class="fixed top-0 w-full h-16 bg-surface-container-lowest border-b border-surface-container-high z-50 flex items-center justify-between px-6">
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[28px]">admin_panel_settings</span><span class="font-display font-bold text-lg tracking-tight">CBT Admin</span></div>
+      <nav class="hidden md:flex gap-4" id="nav-links">
+        <a href="dashboard.html" class="text-sm font-bold text-on-surface-variant hover:text-on-surface transition">Dashboard</a>
+        <a href="bank-soal.html" class="text-sm font-bold text-primary">Bank Soal</a>
+        <a href="ujian.html" class="text-sm font-bold text-on-surface-variant hover:text-on-surface transition">Ujian</a>
+        <a href="hasil.html" class="text-sm font-bold text-on-surface-variant hover:text-on-surface transition">Hasil</a>
+        <a href="monitoring.html" class="text-sm font-bold text-on-surface-variant hover:text-on-surface transition">Monitoring</a>
+      </nav>
+    </div>
+    <div class="flex items-center gap-4">
+      <button onclick="Auth.logout()" class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center hover:bg-error/20 hover:text-error transition"><span class="material-symbols-outlined text-[18px]">logout</span></button>
+    </div>
+  </header>
+
+  <main class="pt-24 px-6 pb-12 max-w-6xl mx-auto flex flex-col lg:flex-row gap-6">
+    <!-- List Soal -->
+    <div class="flex-1">
+      <h1 class="font-display text-2xl font-bold mb-4">Daftar Soal</h1>
+      <div class="space-y-3" data-questions-container>
+        <div class="animate-pulse bg-surface-container h-24 rounded-xl"></div>
+        <div class="animate-pulse bg-surface-container h-24 rounded-xl"></div>
+      </div>
+    </div>
+
+    <!-- Form Tambah Soal -->
+    <div class="w-full lg:w-96 bg-surface-container rounded-xl p-5 border border-surface-container-high h-fit sticky top-24">
+      <h2 class="font-display text-lg font-bold mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-primary">add_box</span> Buat Soal Baru</h2>
+      <form id="form-soal" class="flex flex-col gap-3">
+        <div>
+          <label class="block text-xs font-bold text-on-surface-variant mb-1">Tipe Soal</label>
+          <select id="type" class="w-full bg-surface-container-lowest border border-surface-container-high rounded p-2 text-sm" onchange="toggleOptions()">
+            <option value="mc">Pilihan Ganda (MC)</option>
+            <option value="essay">Essay / Uraian</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-on-surface-variant mb-1">Kategori / Mapel</label>
+          <input type="text" id="category" required class="w-full bg-surface-container-lowest border border-surface-container-high rounded p-2 text-sm" placeholder="Misal: Matematika">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-on-surface-variant mb-1">Pertanyaan</label>
+          <textarea id="text" required rows="3" class="w-full bg-surface-container-lowest border border-surface-container-high rounded p-2 text-sm" placeholder="Tulis soal di sini..."></textarea>
+        </div>
+        
+        <div id="options-container" class="flex flex-col gap-2 p-3 bg-surface-container-lowest rounded border border-surface-container-high">
+          <label class="block text-xs font-bold text-on-surface-variant">Pilihan (Pilih kunci jawaban)</label>
+          <div class="flex items-center gap-2"><input type="radio" name="answerKey" value="A" required checked><input type="text" id="optA" placeholder="Opsi A" class="w-full bg-surface-container border border-surface-container-high rounded p-1.5 text-sm"></div>
+          <div class="flex items-center gap-2"><input type="radio" name="answerKey" value="B"><input type="text" id="optB" placeholder="Opsi B" class="w-full bg-surface-container border border-surface-container-high rounded p-1.5 text-sm"></div>
+          <div class="flex items-center gap-2"><input type="radio" name="answerKey" value="C"><input type="text" id="optC" placeholder="Opsi C" class="w-full bg-surface-container border border-surface-container-high rounded p-1.5 text-sm"></div>
+          <div class="flex items-center gap-2"><input type="radio" name="answerKey" value="D"><input type="text" id="optD" placeholder="Opsi D" class="w-full bg-surface-container border border-surface-container-high rounded p-1.5 text-sm"></div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-on-surface-variant mb-1">Bobot Nilai</label>
+          <input type="number" id="weight" value="1" min="1" required class="w-full bg-surface-container-lowest border border-surface-container-high rounded p-2 text-sm">
+        </div>
+
+        <button type="submit" class="w-full bg-primary text-on-primary font-bold py-2 rounded mt-2 hover:brightness-110 transition">Simpan Soal</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="../assets/js/config.js"></script><script src="../assets/js/api.js"></script><script src="../assets/js/app.js"></script>
+  <script>
+    let allQuestions = [];
+
+    async function loadQuestions() {
+      try {
+        allQuestions = await API.call('adminQuestions');
+        const c = document.querySelector('[data-questions-container]');
+        if (allQuestions.length === 0) {
+          c.innerHTML = `<div class="p-6 text-center text-on-surface-variant bg-surface-container rounded-xl">Belum ada soal. Silakan buat baru.</div>`;
+          return;
+        }
+        c.innerHTML = allQuestions.map(q => `
+          <div class="bg-surface-container p-4 rounded-xl border border-surface-container-high flex justify-between items-start gap-4">
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <span class="px-2 py-0.5 bg-surface-container-lowest text-[10px] font-bold uppercase rounded">${q.type}</span>
+                <span class="px-2 py-0.5 bg-surface-container-lowest text-[10px] font-bold uppercase text-primary rounded">${q.category}</span>
+                <span class="text-xs text-on-surface-variant">Bobot: ${q.weight}</span>
+              </div>
+              <div class="text-sm font-bold mb-2">${q.text}</div>
+              ${q.type === 'mc' ? `<div class="text-xs text-on-surface-variant">Kunci: ${q.answerKey}</div>` : `<div class="text-xs text-tertiary">Butuh penilaian manual</div>`}
+            </div>
+          </div>
+        `).join('');
+      } catch (e) { App.toast(e.message, 'error'); }
+    }
+
+    window.toggleOptions = () => {
+      const type = document.getElementById('type').value;
+      document.getElementById('options-container').style.display = type === 'mc' ? 'flex' : 'none';
+    };
+
+    document.getElementById('form-soal').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const type = document.getElementById('type').value;
+      const payload = {
+        type,
+        category: document.getElementById('category').value,
+        text: document.getElementById('text').value,
+        weight: document.getElementById('weight').value,
+      };
+
+      if (type === 'mc') {
+        payload.options = [
+          { key: 'A', text: document.getElementById('optA').value },
+          { key: 'B', text: document.getElementById('optB').value },
+          { key: 'C', text: document.getElementById('optC').value },
+          { key: 'D', text: document.getElementById('optD').value }
+        ];
+        payload.answerKey = document.querySelector('input[name="answerKey"]:checked').value;
+      }
+
+      try {
+        App.loading(true, 'Menyimpan soal...');
+        await API.call('adminCreateQuestion', payload);
+        App.loading(false);
+        App.toast('Soal berhasil disimpan!', 'success');
+        e.target.reset();
+        toggleOptions();
+        loadQuestions();
+      } catch (err) {
+        App.loading(false);
+        App.toast(err.message, 'error');
+      }
+    });
+
+    (async () => {
+      const user = await API.requireAuth();
+      if (user.role !== 'admin' && user.role !== 'guru') { location.href = '../index.html'; return; }
+      loadQuestions();
+    })();
+  </script>
+</body>
+</html>

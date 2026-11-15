@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html class="dark" lang="id">
+<head>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Hasil Ujian — CBT Online</title>
+  <link rel="stylesheet" href="assets/css/tokens.css"/><link rel="stylesheet" href="assets/css/custom.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@100..900&family=Space+Grotesk:wght@100..900&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: "class", theme: { extend: { colors: { background: "#0b1326", surface: "#0b1326", "surface-container-lowest": "#060e20", "surface-container-low": "#131b2e", "surface-container": "#171f33", "surface-container-high": "#222a3d", "surface-container-highest": "#2d3449", "on-surface": "#dae2fd", "on-surface-variant": "#c2c6d6", primary: "#adc6ff", "on-primary": "#002e6a", secondary: "#a4c9ff", tertiary: "#4edea3", error: "#ffb4ab" }, fontFamily: { display: ["Space Grotesk"], body: ["Atkinson Hyperlegible Next"] } } } }</script>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-md bg-surface-container rounded-2xl p-8 shadow-2xl border border-surface-container-high text-center relative overflow-hidden">
+    <div class="w-20 h-20 bg-tertiary/20 rounded-full flex items-center justify-center mx-auto mb-6"><span class="material-symbols-outlined text-[40px] text-tertiary">check_circle</span></div>
+    <h1 class="font-display text-2xl font-bold mb-2">Ujian Selesai</h1>
+    <p class="text-on-surface-variant text-sm mb-8" data-result-exam>...</p>
+    <div class="mb-8"><div class="text-sm font-bold uppercase tracking-wider text-on-surface-variant mb-2">Nilai Akhir</div><div class="font-display text-6xl font-bold text-primary" data-result-score>0</div></div>
+    <div class="grid grid-cols-2 gap-4 bg-surface-container-lowest p-4 rounded-xl mb-8">
+      <div class="text-left"><div class="text-xs text-on-surface-variant mb-1">Objektif (PG)</div><div class="font-bold" data-result-objective>0</div></div>
+      <div class="text-left border-l border-surface-container-high pl-4"><div class="text-xs text-on-surface-variant mb-1">Essay</div><div class="font-bold" data-result-essay>0</div></div>
+    </div>
+    <div class="flex flex-col gap-3"><a href="dashboard.html" class="w-full bg-primary text-on-primary font-bold py-3 rounded-xl hover:brightness-110 transition">Kembali ke Dashboard</a></div>
+  </div>
+  <script src="assets/js/config.js"></script><script src="assets/js/api.js"></script><script src="assets/js/app.js"></script>
+  <script>
+    (async () => {
+      try {
+        App.loading(true, 'Memuat hasil...'); await API.requireAuth();
+        const history = await API.call('listMyResults'); if (!history || history.length === 0) { location.href = 'dashboard.html'; return; }
+        const latest = history[0];
+        document.querySelectorAll('[data-result-score]').forEach(el => el.textContent = App.fmt(latest.total));
+        document.querySelectorAll('[data-result-exam]').forEach(el => el.textContent = latest.examName);
+        document.querySelectorAll('[data-result-objective]').forEach(el => el.textContent = App.fmt(latest.objectiveScore));
+        document.querySelectorAll('[data-result-essay]').forEach(el => el.textContent = latest.essayScore !== null ? App.fmt(latest.essayScore) : 'Pending');
+        App.loading(false);
+      } catch (e) { App.loading(false); App.toast('Gagal memuat hasil: ' + e.message, 'error'); }
+    })();
+  </script>
+</body>
+</html>

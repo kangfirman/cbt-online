@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html class="dark" lang="id">
+<head>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Hasil Ujian — CBT Admin</title>
+  <link rel="stylesheet" href="../assets/css/tokens.css"/><link rel="stylesheet" href="../assets/css/custom.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@100..900&family=Space+Grotesk:wght@100..900&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: "class", theme: { extend: { colors: { background: "#0b1326", surface: "#0b1326", "surface-container-lowest": "#060e20", "surface-container-low": "#131b2e", "surface-container": "#171f33", "surface-container-high": "#222a3d", "on-surface": "#dae2fd", "on-surface-variant": "#c2c6d6", primary: "#adc6ff", "on-primary": "#002e6a", secondary: "#a4c9ff", tertiary: "#4edea3", error: "#ffb4ab" }, fontFamily: { display: ["Space Grotesk"], body: ["Atkinson Hyperlegible Next"] } } } }</script>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen antialiased">
+  <header class="fixed top-0 w-full h-16 bg-surface-container-lowest border-b border-surface-container-high z-50 flex items-center justify-between px-6">
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[28px]">admin_panel_settings</span><span class="font-display font-bold text-lg tracking-tight">CBT Admin</span></div>
+      <nav class="hidden md:flex gap-4" id="nav-links">
+        <a href="dashboard.html" class="text-sm font-bold text-on-surface-variant hover:text-on-surface transition">Dashboard</a>
+        <a href="bank-soal.html" class="text-sm font-bold text-on-surface-variant hover:text-on-surface transition">Bank Soal</a>
+        <a href="ujian.html" class="text-sm font-bold text-on-surface-variant hover:text-on-surface transition">Ujian</a>
+        <a href="hasil.html" class="text-sm font-bold text-primary">Hasil</a>
+        <a href="monitoring.html" class="text-sm font-bold text-on-surface-variant hover:text-on-surface transition">Monitoring</a>
+      </nav>
+    </div>
+    <div class="flex items-center gap-4">
+      <button onclick="Auth.logout()" class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center hover:bg-error/20 hover:text-error transition"><span class="material-symbols-outlined text-[18px]">logout</span></button>
+    </div>
+  </header>
+
+  <main class="pt-24 px-6 pb-12 max-w-6xl mx-auto">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      <div>
+        <h1 class="font-display text-2xl font-bold">Rekap Nilai</h1>
+        <p class="text-sm text-on-surface-variant">Pilih ujian untuk melihat hasil siswa.</p>
+      </div>
+      <select id="select-exam" class="bg-surface-container border border-surface-container-high rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-primary" onchange="loadResults(this.value)">
+        <option value="">-- Pilih Ujian --</option>
+      </select>
+    </div>
+
+    <div class="bg-surface-container rounded-xl border border-surface-container-high overflow-hidden">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-surface-container-high text-on-surface-variant">
+          <tr>
+            <th class="p-3">Nama Siswa</th>
+            <th class="p-3">Status</th>
+            <th class="p-3 text-center">Skor PG</th>
+            <th class="p-3 text-center">Skor Essay</th>
+            <th class="p-3 text-center">Total</th>
+            <th class="p-3 text-right">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="results-body" class="divide-y divide-surface-container-high">
+          <tr><td colspan="6" class="p-6 text-center text-on-surface-variant">Pilih ujian terlebih dahulu.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Modal Nilai Essay (Sederhana) -->
+  <div id="modal-essay" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4">
+    <div class="bg-surface-container rounded-xl w-full max-w-lg p-6 border border-surface-container-high">
+      <h3 class="font-bold text-lg mb-4">Form Penilaian Essay</h3>
+      <input type="hidden" id="essay-session-id">
+      <input type="hidden" id="essay-question-id">
+      <div class="mb-4">
+        <label class="block text-sm text-on-surface-variant mb-1">Skor (0-100)</label>
+        <input type="number" id="essay-score" class="w-full bg-surface-container-lowest border border-surface-container-high rounded p-2" min="0" max="100">
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm text-on-surface-variant mb-1">Feedback (Opsional)</label>
+        <textarea id="essay-feedback" rows="2" class="w-full bg-surface-container-lowest border border-surface-container-high rounded p-2"></textarea>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button onclick="document.getElementById('modal-essay').classList.add('hidden')" class="px-4 py-2 text-sm font-bold bg-surface-container-high rounded">Batal</button>
+        <button onclick="submitEssayScore()" class="px-4 py-2 text-sm font-bold bg-primary text-on-primary rounded">Simpan Nilai</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/config.js"></script><script src="../assets/js/api.js"></script><script src="../assets/js/app.js"></script>
+  <script>
+    let currentExamId = '';
+
+    async function loadExams() {
+      const exams = await API.call('adminExams');
+      const select = document.getElementById('select-exam');
+      exams.forEach(e => {
+        const opt = document.createElement('option');
+        opt.value = e.id; opt.textContent = e.name;
+        select.appendChild(opt);
+      });
+    }
+
+    window.loadResults = async (examId) => {
+      if(!examId) return;
+      currentExamId = examId;
+      const tbody = document.getElementById('results-body');
+      tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center animate-pulse">Memuat data...</td></tr>`;
+      
+      try {
+        const data = await API.call('adminResults', { examId });
+        if (data.students.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-on-surface-variant">Belum ada siswa yang mengerjakan.</td></tr>`; return;
+        }
+        
+        tbody.innerHTML = data.students.map(s => `
+          <tr class="hover:bg-surface-container-high/50 transition">
+            <td class="p-3 font-bold">${s.name}</td>
+            <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold ${s.status === 'submitted' ? 'bg-tertiary/20 text-tertiary' : 'bg-outline/20'}">${s.status}</span></td>
+            <td class="p-3 text-center">${s.objectiveScore ?? '-'}</td>
+            <td class="p-3 text-center">${s.essayScore ?? '-'} ${s.pendingEssays > 0 ? `<span class="text-error text-[10px] block">${s.pendingEssays} Pending</span>` : ''}</td>
+            <td class="p-3 text-center font-bold text-primary">${s.total ?? '-'}</td>
+            <td class="p-3 text-right">
+              ${s.pendingEssays > 0 ? `<button onclick="openEssayModal('${s.sessionId}')" class="text-xs font-bold bg-secondary/20 text-secondary px-3 py-1 rounded hover:bg-secondary/30">Nilai Essay</button>` : `<span class="text-xs text-tertiary">Selesai</span>`}
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) { tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-error">${e.message}</td></tr>`; }
+    };
+
+    window.openEssayModal = (sessionId) => {
+      // Untuk simplifikasi, kita asumsikan 1 session 1 essay. Di produksi, butuh loop per soal essay.
+      const qId = prompt('Masukkan ID Soal Essay yang ingin dinilai (Misal: Q-3):');
+      if(!qId) return;
+      document.getElementById('essay-session-id').value = sessionId;
+      document.getElementById('essay-question-id').value = qId;
+      document.getElementById('essay-score').value = '';
+      document.getElementById('essay-feedback').value = '';
+      document.getElementById('modal-essay').classList.remove('hidden');
+      document.getElementById('modal-essay').classList.add('flex');
+    };
+
+    window.submitEssayScore = async () => {
+      const sessionId = document.getElementById('essay-session-id').value;
+      const questionId = document.getElementById('essay-question-id').value;
+      const score = document.getElementById('essay-score').value;
+      const feedback = document.getElementById('essay-feedback').value;
+
+      if(score === '') return App.toast('Skor wajib diisi', 'error');
+
+      try {
+        App.loading(true, 'Menyimpan nilai...');
+        await API.call('adminGradeEssay', { sessionId, questionId, score, feedback });
+        App.loading(false);
+        App.toast('Nilai essay tersimpan', 'success');
+        document.getElementById('modal-essay').classList.add('hidden');
+        document.getElementById('modal-essay').classList.remove('flex');
+        loadResults(currentExamId);
+      } catch (e) { App.loading(false); App.toast(e.message, 'error'); }
+    };
+
+    (async () => {
+      const user = await API.requireAuth();
+      if (user.role !== 'admin' && user.role !== 'guru') { location.href = '../index.html'; return; }
+      loadExams();
+    })();
+  </script>
+</body>
+</html>

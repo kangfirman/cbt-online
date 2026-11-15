@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html class="dark" lang="id">
+<head>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Ujian — CBT Online</title>
+  <link rel="stylesheet" href="assets/css/tokens.css"/><link rel="stylesheet" href="assets/css/custom.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@100..900&family=Space+Grotesk:wght@100..900&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: "class", theme: { extend: { colors: { background: "#0b1326", surface: "#0b1326", "surface-container-lowest": "#060e20", "surface-container-low": "#131b2e", "surface-container": "#171f33", "surface-container-high": "#222a3d", "surface-container-highest": "#2d3449", "on-surface": "#dae2fd", "on-surface-variant": "#c2c6d6", primary: "#adc6ff", "on-primary": "#002e6a", secondary: "#a4c9ff", tertiary: "#4edea3", error: "#ffb4ab" }, fontFamily: { display: ["Space Grotesk"], body: ["Atkinson Hyperlegible Next"] } } } }</script>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen flex flex-col antialiased">
+  <header class="sticky top-0 z-40 w-full bg-surface/95 backdrop-blur-md border-b border-surface-container-high h-16 flex items-center justify-between px-4 lg:px-6">
+    <div class="flex items-center gap-4 min-w-0">
+      <span class="font-display font-bold text-lg text-primary shrink-0">CBT-GAS</span>
+      <div class="min-w-0"><h1 class="font-bold text-sm truncate" data-exam-title>Memuat...</h1><p class="text-xs text-on-surface-variant truncate" data-user-name>...</p></div>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-lowest rounded-lg border border-surface-container-high"><span class="material-symbols-outlined text-[18px] text-secondary">timer</span><span class="font-mono font-bold text-lg" data-timer>00:00</span></div>
+      <button onclick="confirmSubmit()" class="bg-error/20 text-error hover:bg-error/30 px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">assignment_turned_in</span><span class="hidden sm:inline">Selesai</span></button>
+    </div>
+  </header>
+  <div class="w-full h-1 bg-surface-container-high"><div class="h-full bg-primary transition-all duration-300" data-progress-bar style="width: 0%"></div></div>
+  <main class="flex-1 flex flex-col lg:flex-row max-w-7xl mx-auto w-full p-4 gap-6">
+    <div class="flex-1 flex flex-col gap-4">
+      <div class="flex items-center justify-between bg-surface-container-low p-3 rounded-lg border border-surface-container-high">
+        <span class="text-sm font-bold text-primary" data-q-number>Soal 1 dari 40</span>
+        <div class="flex items-center gap-2"><span class="text-xs text-on-surface-variant mr-2 opacity-0 transition-opacity duration-300" data-autosave>✓ Tersimpan</span><button class="p-1.5 hover:bg-surface-container-high rounded text-on-surface-variant" onclick="toggleGrid()"><span class="material-symbols-outlined text-[20px]">grid_view</span></button></div>
+      </div>
+      <div class="bg-surface-container rounded-xl p-6 lg:p-8 flex-1 border border-surface-container-high shadow-lg">
+        <div class="text-lg lg:text-xl leading-relaxed mb-8" data-q-text>Memuat soal...</div>
+        <div class="space-y-3" data-q-options></div>
+      </div>
+      <div class="flex items-center justify-between bg-surface-container-low p-3 rounded-lg border border-surface-container-high mt-auto">
+        <button data-btn-prev class="px-5 py-2.5 bg-surface-container-high hover:bg-surface-container-highest rounded-lg text-sm font-bold transition flex items-center gap-1 text-on-surface-variant"><span class="material-symbols-outlined text-[18px]">arrow_back</span> Sebelumnya</button>
+        <button data-btn-next class="px-5 py-2.5 bg-primary text-on-primary hover:brightness-110 rounded-lg text-sm font-bold transition flex items-center gap-1">Selanjutnya <span class="material-symbols-outlined text-[18px]">arrow_forward</span></button>
+      </div>
+    </div>
+    <aside id="question-grid" class="hidden lg:block w-full lg:w-80 bg-surface-container rounded-xl border border-surface-container-high p-4 h-fit sticky top-24">
+      <h3 class="font-bold text-sm mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[20px]">grid_4x4</span> Navigasi Soal</h3>
+      <div class="grid grid-cols-5 gap-2" data-grid-container></div>
+      <div class="mt-6 pt-4 border-t border-surface-container-high space-y-2 text-xs"><div class="flex items-center gap-2"><div class="w-4 h-4 rounded bg-tertiary/20 border border-tertiary"></div> Dijawab</div><div class="flex items-center gap-2"><div class="w-4 h-4 rounded bg-surface-container-high border border-surface-container-highest"></div> Belum</div></div>
+    </aside>
+  </main>
+  <script src="assets/js/config.js"></script><script src="assets/js/api.js"></script><script src="assets/js/app.js"></script>
+  <script>
+    (() => {
+      const raw = sessionStorage.getItem('cbt_exam_session'); if (!raw) { location.href = 'dashboard.html'; return; }
+      const state = JSON.parse(raw); let answers = { ...state.savedAnswers }; let dirty = false; let submitted = false; let currentIndex = 0; let endMs = new Date(state.endTime).getTime();
+      const user = API.getUser(); if (user) App.bindUserInfo(user);
+
+      function render() {
+        const q = state.questions[currentIndex]; if (!q) return;
+        document.querySelectorAll('[data-q-number]').forEach(el => el.textContent = `Soal ${currentIndex + 1} dari ${state.questions.length}`);
+        document.querySelectorAll('[data-exam-title]').forEach(el => el.textContent = state.exam.name);
+        document.querySelectorAll('[data-q-text]').forEach(el => el.innerHTML = q.text.replace(/\n/g, '<br>'));
+        const optsEl = document.querySelector('[data-q-options]');
+        if (optsEl) {
+          if (q.type === 'essay') {
+            optsEl.innerHTML = `<textarea data-essay-input rows="8" class="w-full bg-surface-container-lowest text-on-surface rounded-lg p-4 font-body border border-surface-container-high focus:border-primary focus:ring-1 focus:ring-primary outline-none transition" placeholder="Tulis jawaban essay Anda di sini...">${answers[q.id] || ''}</textarea>`;
+            const ta = optsEl.querySelector('[data-essay-input]'); ta.addEventListener('input', () => { answers[q.id] = ta.value; dirty = true; renderGrid(); });
+          } else {
+            optsEl.innerHTML = q.options.map(o => `<label class="flex items-start gap-4 p-4 rounded-xl cursor-pointer border transition-all ${answers[q.id] === o.key ? 'bg-primary/10 border-primary ring-1 ring-primary' : 'bg-surface-container-lowest border-surface-container-high hover:border-primary/50'}"><input type="radio" name="answer" value="${o.key}" ${answers[q.id] === o.key ? 'checked' : ''} class="mt-1 w-4 h-4 text-primary bg-surface-container border-surface-container-high focus:ring-primary focus:ring-2"><div class="flex-1"><span class="font-bold text-primary mr-2">${o.key}.</span><span class="text-on-surface">${o.text}</span></div></label>`).join('');
+            optsEl.querySelectorAll('input[name="answer"]').forEach(input => { input.addEventListener('change', () => { answers[q.id] = input.value; dirty = true; render(); renderGrid(); }); });
+          }
+        }
+        document.querySelector('[data-progress-bar]').style.width = ((currentIndex + 1) / state.questions.length * 100) + '%';
+        const btnPrev = document.querySelector('[data-btn-prev]'); const btnNext = document.querySelector('[data-btn-next]');
+        if (btnPrev) btnPrev.style.visibility = currentIndex === 0 ? 'hidden' : 'visible';
+        if (btnNext) btnNext.style.display = currentIndex === state.questions.length - 1 ? 'none' : 'flex';
+      }
+
+      function renderGrid() {
+        const c = document.querySelector('[data-grid-container]'); if (!c) return;
+        c.innerHTML = state.questions.map((q, i) => {
+          const isAns = answers[q.id] !== undefined && answers[q.id] !== ''; const isActive = i === currentIndex;
+          return `<button onclick="jumpTo(${i})" class="h-10 rounded-lg text-sm font-bold transition-all flex items-center justify-center ${isActive ? 'bg-primary text-on-primary ring-2 ring-primary ring-offset-2 ring-offset-surface-container' : isAns ? 'bg-tertiary/20 text-tertiary border border-tertiary' : 'bg-surface-container-high text-on-surface-variant border border-surface-container-highest hover:border-primary/50'}">${i + 1}</button>`;
+        }).join('');
+      }
+
+      window.jumpTo = (idx) => { currentIndex = idx; render(); if (window.innerWidth < 1024) toggleGrid(); };
+      window.toggleGrid = () => { const g = document.getElementById('question-grid'); if (g) g.classList.toggle('hidden'); };
+      document.querySelector('[data-btn-prev]').onclick = () => { if (currentIndex > 0) { currentIndex--; render(); } };
+      document.querySelector('[data-btn-next]').onclick = () => { if (currentIndex < state.questions.length - 1) { currentIndex++; render(); } };
+
+      function tick() {
+        if (submitted) return; const left = Math.max(0, endMs - Date.now()); const sec = Math.floor(left / 1000);
+        document.querySelectorAll('[data-timer]').forEach(el => { el.textContent = App.fmtDuration(sec); if (sec <= 300) el.className = 'font-mono font-bold text-lg text-error animate-pulse'; else if (sec <= 600) el.className = 'font-mono font-bold text-lg text-secondary'; else el.className = 'font-mono font-bold text-lg text-on-surface'; });
+        if (sec <= 0) { submitted = true; App.toast('Waktu habis! Jawaban terkirim otomatis.', 'warning', 5000); submitExam(true); return; }
+        requestAnimationFrame(() => setTimeout(tick, 1000));
+      }
+      tick();
+
+      setInterval(async () => {
+        if (!dirty || submitted) return;
+        try { await API.call('saveAnswers', { sessionId: state.sessionId, answers }); dirty = false; const el = document.querySelector('[data-autosave]'); if (el) { el.style.opacity = '1'; setTimeout(() => el.style.opacity = '0', 2000); } } catch (e) {}
+      }, 20000);
+
+      window.addEventListener('beforeunload', (e) => { if (dirty && !submitted) { navigator.sendBeacon?.(CBT.GAS_URL, new Blob([JSON.stringify({ action: 'saveAnswers', token: API.getToken(), data: { sessionId: state.sessionId, answers } })], { type: 'text/plain' })); e.preventDefault(); e.returnValue = 'Jawaban belum tersimpan. Yakin keluar?'; } });
+      document.addEventListener('visibilitychange', () => { if (document.hidden && !submitted) { API.call('logViolation', { sessionId: state.sessionId, type: 'tab_switch' }).catch(() => {}); } });
+
+      window.confirmSubmit = async () => {
+        if (submitted) return; const un = state.questions.length - Object.keys(answers).filter(k => answers[k] !== '').length;
+        if (confirm(un > 0 ? `Masih ada ${un} soal kosong. Yakin selesai?` : 'Yakin ingin menyelesaikan ujian?')) submitExam(false);
+      };
+      async function submitExam(isAuto) {
+        submitted = true; App.loading(true, 'Mengirim jawaban akhir...');
+        try { await API.call('saveAnswers', { sessionId: state.sessionId, answers }); await API.call('submitExam', { sessionId: state.sessionId }); sessionStorage.removeItem('cbt_exam_session'); location.href = 'result.html'; }
+        catch (e) { submitted = false; App.loading(false); App.toast('Gagal submit: ' + e.message, 'error', 5000); }
+      }
+      render(); renderGrid();
+    })();
+  </script>
+</body>
+</html>
